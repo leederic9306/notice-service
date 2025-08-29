@@ -6,6 +6,8 @@ import com.rsupport.notice.application.query.NoticeSpecification;
 import com.rsupport.notice.domain.notice.*;
 import com.rsupport.notice.infrastructure.filestorage.FileStorage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,7 @@ public class NoticeService {
     }
 
     @Transactional
+    @CacheEvict(value = "noticeDetail", key = "#id")
     public void update(Long id, NoticeUpdateRequest req, List<MultipartFile> newFiles) {
         Notice n = noticeRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Notice not found"));
         n.update(req.title(), req.content(), req.startAt(), req.endAt());
@@ -70,10 +73,12 @@ public class NoticeService {
     }
 
     @Transactional
+    @CacheEvict(value = "noticeDetail", key = "#id")
     public void delete(Long id) {
         noticeRepository.deleteById(id);
     }
 
+    @Cacheable(value = "noticeDetail", key = "#id")
     public Page<NoticeListItemResponse> list(String q, boolean titleOnly,
                                              java.time.LocalDate from, java.time.LocalDate to,
                                              Pageable pageable) {
